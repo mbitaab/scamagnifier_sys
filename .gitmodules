@@ -1,0 +1,5 @@
+[submodule "pipline"]
+	path = pipline
+	url = git@github.com:mbitaab/scamagnifier.git
+	branch = main
+	update = merge
