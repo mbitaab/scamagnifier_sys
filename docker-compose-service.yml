@@ -1,0 +1,67 @@
+services:
+# **************** MongoDB ****************
+  mongodb:
+    image: mongo:latest
+    container_name: scamagnifier-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${SCAMAGNIFIER_MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${SCAMAGNIFIER_MONGO_USER_PASSWORD}
+      SCAMAGNIFIER_EXT_MONGO_NORMAL_USERNAME: ${SCAMAGNIFIER_MONGO_NORMAL_USERNAME}
+      SCAMAGNIFIER_EXT_MONGO_NORMAL_PASSWORD: ${SCAMAGNIFIER_MONGO_NORMAL_PASSWORD}
+      SCAMAGNIFIER_EXT_MONGO_DB: ${SCAMAGNIFIER_MONGO_DB}
+    volumes:
+      - smagnifier_mongodb_volume:/data/db
+      - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - app-network-scamagnifier
+
+# ************** selenium grid **************
+  selenium-grid:
+    image: seleniarm/standalone-chromium:latest
+    container_name: scamagnifier-selenium
+    ports:
+      - "4444:4444"
+    environment:
+      SE_NODE_MAX_SESSIONS: 100
+      SE_NODE_OVERRIDE_MAX_SESSIONS: "true"
+      SE_NODE_SESSION_TIMEOUT: 1000
+      SE_OPTS: "--log-level OFF"
+      PYTHONUNBUFFERED: 1
+    shm_size: 4g
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - app-network-scamagnifier
+    deploy:
+      resources:
+        limits:
+          cpus: '16'
+          memory: 32G 
+        reservations:
+          cpus: '4'
+          memory: 8G
+
+# **************** Volume ****************
+volumes:
+  smagnifier_data_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: 'bind'
+      device: ${VOLUME_DIR}
+  smagnifier_mongodb_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: 'bind'
+      device: ${VOLUME_MONGO}
+
+# **************** Network ****************
+networks:
+  app-network-scamagnifier:
+    driver: bridge
+    name: app-network-scamagnifier
+
+
